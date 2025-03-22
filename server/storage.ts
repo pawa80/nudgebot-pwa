@@ -6,14 +6,14 @@ import {
   users, entries, summaries, settings
 } from "@shared/schema";
 import { eq, and, between, desc } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/neon-serverless";
-import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import bcrypt from "bcryptjs";
 
-// Initialize Neon Serverless client with the connection string
-const sql = neon(process.env.DATABASE_URL!);
+// Connect to the database
+const queryClient = postgres(process.env.DATABASE_URL!, { max: 1 });
 // Initialize Drizzle ORM
-const db = drizzle(sql);
+const db = drizzle(queryClient);
 
 // Storage interface
 export interface IStorage {
@@ -21,6 +21,7 @@ export interface IStorage {
   createUser(username: string, email: string, password: string): Promise<User>;
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserById(id: number): Promise<User | undefined>;
+  getAllUsers(): Promise<User[]>;
   
   // Entries
   getEntries(userId: number): Promise<Entry[]>;
@@ -82,6 +83,11 @@ export class PostgresStorage implements IStorage {
       .where(eq(users.id, id));
     
     return results[0];
+  }
+  
+  async getAllUsers(): Promise<User[]> {
+    return db.select()
+      .from(users);
   }
   
   // Entries

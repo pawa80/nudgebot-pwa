@@ -2,10 +2,13 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { generateAIResponse, generateWeeklySummary } from "./openai";
-import { insertEntrySchema, insertSettingsSchema } from "@shared/schema";
+import { insertEntrySchema } from "@shared/schema";
 import { z } from "zod";
 import { ZodError } from "zod";
 import { setupScheduler } from "./scheduler";
+import { register, login, logout, authenticate, getCurrentUser, getUserId } from "./auth";
+import cookieParser from "cookie-parser";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Create HTTP server
@@ -14,12 +17,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup weekly summary scheduler
   setupScheduler(storage);
   
-  // API Routes
+  // Middleware
+  app.use(cookieParser());
   
-  // Get all entries (most recent first)
-  app.get("/api/entries", async (_req: Request, res: Response) => {
+  // Auth Routes
+  app.post("/api/auth/register", register);
+  app.post("/api/auth/login", login);
+  app.post("/api/auth/logout", logout);
+  app.get("/api/auth/me", authenticate, getCurrentUser);
+  
+  // Protected API Routes
+  
+  // Get all entries (most recent first) for the current user
+  app.get("/api/entries", authenticate, async (req: Request, res: Response) => {
     try {
-      const entries = await storage.getEntries();
+      const userId = getUserId(req);
+      const entries = await storage.getEntries(userId);
       return res.json({ entries });
     } catch (error) {
       console.error("Error fetching entries:", error);
@@ -28,7 +41,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Create a new check-in entry
-  app.post("/api/check-in", async (req: Request, res: Response) => {
+  app.post("/api/check-in", authenticate, async (req: Request, res: Response) => {
     try {
       // Validate user input
       const taskSchema = z.object({
@@ -36,15 +49,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const { task } = taskSchema.parse(req.body);
+      const userId = getUserId(req);
       
       // Get user settings for AI tone
-      const settings = await storage.getSettings();
+      const settings = await storage.getSettings(userId);
       
       // Generate AI response
       const aiResponse = await generateAIResponse(task, settings.aiTone);
       
       // Create new entry
       const newEntry = await storage.createEntry({
+        userId,
         task,
         aiResponse,
         completed: false
@@ -63,15 +78,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Mark an entry as completed
-  app.patch("/api/entries/:id/complete", async (req: Request, res: Response) => {
+  app.patch("/api/entries/:id/complete", authenticate, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id, 10);
+      const userId = getUserId(req);
       
       if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid entry ID" });
       }
       
-      const updatedEntry = await storage.markEntryCompleted(id);
+      const updatedEntry = await storage.markEntryCompleted(id, userId);
       
       if (!updatedEntry) {
         return res.status(404).json({ message: "Entry not found" });
@@ -85,9 +101,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get current weekly summary
-  app.get("/api/summary", async (_req: Request, res: Response) => {
+  app.get("/api/summary", authenticate, async (req: Request, res: Response) => {
     try {
-      const summary = await storage.getCurrentWeeklySummary();
+      const userId = getUserId(req);
+      const summary = await storage.getCurrentWeeklySummary(userId);
       
       // If no summary exists, generate one on-the-fly
       if (!summary) {
@@ -100,7 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 7);
         
-        const entries = await storage.getEntriesInDateRange(startOfWeek, endOfWeek);
+        const entries = await storage.getEntriesInDateRange(userId, startOfWeek, endOfWeek);
         
         if (entries.length === 0) {
           return res.json({ summary: null });
@@ -111,6 +128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Create and save the summary
         const newSummary = await storage.createSummary({
+          userId,
           achievements,
           patterns,
           themes,
@@ -128,9 +146,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get user settings
-  app.get("/api/settings", async (_req: Request, res: Response) => {
+  app.get("/api/settings", authenticate, async (req: Request, res: Response) => {
     try {
-      const settings = await storage.getSettings();
+      const userId = getUserId(req);
+      const settings = await storage.getSettings(userId);
       return res.json({ settings });
     } catch (error) {
       console.error("Error fetching settings:", error);
@@ -139,10 +158,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Update user settings
-  app.patch("/api/settings", async (req: Request, res: Response) => {
+  app.patch("/api/settings", authenticate, async (req: Request, res: Response) => {
     try {
-      const updatedSettings = insertSettingsSchema.parse(req.body);
-      const settings = await storage.updateSettings(updatedSettings);
+      const userId = getUserId(req);
+      const { reminderTime, pushNotifications, weeklySummary, aiTone } = req.body;
+      
+      // Validate settings
+      const settingsSchema = z.object({
+        reminderTime: z.string().optional(),
+        pushNotifications: z.boolean().optional(),
+        weeklySummary: z.boolean().optional(),
+        aiTone: z.string().optional()
+      });
+      
+      const validatedSettings = settingsSchema.parse({
+        reminderTime,
+        pushNotifications,
+        weeklySummary,
+        aiTone
+      });
+      
+      const settings = await storage.updateSettings(userId, validatedSettings);
       return res.json({ settings });
     } catch (error) {
       console.error("Error updating settings:", error);
@@ -152,6 +188,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       return res.status(500).json({ message: "Failed to update settings" });
+    }
+  });
+  
+  // Export user data
+  app.post("/api/export", authenticate, async (req: Request, res: Response) => {
+    try {
+      const userId = getUserId(req);
+      const { format = 'json' } = req.body;
+      
+      // Validate format
+      if (!['json', 'csv'].includes(format)) {
+        return res.status(400).json({ message: "Invalid format. Use 'json' or 'csv'." });
+      }
+      
+      const data = await storage.exportUserData(userId, format as 'json' | 'csv');
+      
+      if (format === 'json') {
+        return res.json({ data });
+      } else {
+        // Set CSV headers
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename="nudge-data.csv"');
+        return res.send(data);
+      }
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      return res.status(500).json({ message: "Failed to export data" });
     }
   });
 
