@@ -21,18 +21,35 @@ export async function generateAIResponse(task: string, tone: string = "motivatio
       messages: [
         {
           role: "system",
-          content: `You are a thoughtful coach that helps users reflect on their daily tasks. 
-          ${toneInstructions}
-          Keep your response to ONE brief paragraph (2-3 sentences maximum).`
+          content: `You are a motivational coach who uses:
+  - paradoxical, iterative challenges
+  - playful micro-dares
+  - 'infinite game' framing
+
+Generate a short, 2-4 sentence nudge that:
+  - references the user's goal by name,
+  - includes a paradox or an 'unlock next level' idea,
+  - gently challenges the user with a dare or provocative question,
+  - uses an upbeat but slightly edgy tone (no generic fluff).
+  - feels tailored to an ADHD-like, novelty-seeking mind—fun, slightly edgy, never generic.
+  
+Example style snippets:
+  'If you handle this task now, you'll create a weirdly dangerous free afternoon—dangerous, because you might come up with even bigger ideas to tackle next. Are you brave enough to open that door?'
+  
+  'I dare you to finish half your tasks by lunchtime—if you do, you earn bragging rights for the rest of the day.'
+  
+  'Finishing this task only unlocks the next level of your infinite game. The question is: are you playing to finish or playing to evolve?'
+  
+Keep your response to ONE brief paragraph (2-4 sentences maximum).
+${toneInstructions}`
         },
         {
           role: "user",
-          content: `The user has shared the following high-impact task they plan to work on today: "${task}". 
-          Provide a thought-provoking, challenging, or paradoxical response that makes them think more deeply about this task.`
+          content: `My top goal today is: "${task}"`
         }
       ],
       max_tokens: 150,
-      temperature: 0.7,
+      temperature: 0.8,
     });
 
     return response.choices[0].message.content?.trim() || getDefaultResponse(tone);
@@ -60,12 +77,20 @@ export async function generateWeeklySummary(entries: { task: string; aiResponse:
       messages: [
         {
           role: "system",
-          content: `Analyze the user's daily tasks from the past week and create a brief, insightful summary focusing on three areas:
-          1. Achievements - what they accomplished and completed
-          2. Patterns - tendencies or habits in their task selection or completion
-          3. Themes - recurring topics or focus areas
-          
-          Keep each section concise (1-2 sentences maximum). Return your analysis in JSON format with three keys: achievements, patterns, and themes.`
+          content: `You are analyzing a user's weekly tasks with a paradoxical, playful, 'infinite game' mindset.
+
+Create a brief, insightful summary focusing on three areas:
+1. Achievements - what they accomplished and completed, framed as levels unlocked
+2. Patterns - tendencies or habits in their task selection or completion, with a playful observation
+3. Themes - recurring topics or focus areas, with a provocative question about what's next
+
+Your analysis should:
+- Be concise but punchy (1-2 sentences maximum per section)
+- Include a paradoxical or playful observation (e.g., "You thought you were done, but you're only leveling up. Ready for Round 2?")
+- Have an 'infinite game' framing that recognizes completion as just a doorway to new challenges
+- Feel tailored to an ADHD-like, novelty-seeking mind—fun, slightly edgy, never generic
+
+Return your analysis in JSON format with three keys: achievements, patterns, and themes.`
         },
         {
           role: "user",
@@ -74,7 +99,7 @@ export async function generateWeeklySummary(entries: { task: string; aiResponse:
       ],
       response_format: { type: "json_object" },
       max_tokens: 300,
-      temperature: 0.5,
+      temperature: 0.7,
     });
 
     const result = JSON.parse(response.choices[0].message.content || "{}");
@@ -108,10 +133,10 @@ function getDefaultResponse(tone: string): string {
   type ResponseKey = 'motivational' | 'reflective' | 'challenging' | 'default';
   
   const responses: Record<ResponseKey, string> = {
-    motivational: "What if completing this task isn't just about checking a box, but about unlocking a new level of possibility? Success often creates its own momentum.",
-    reflective: "Consider how this task fits into your larger journey. What does it reveal about your priorities and the future you're creating?",
-    challenging: "If this is truly high-impact, how might you approach it in a way that maximizes its transformative potential rather than just getting it done?",
-    default: "What new possibilities might emerge once you complete this task? Remember that each achievement creates its own horizon of new opportunities."
+    motivational: "I dare you to finish this task before lunch—then watch how dangerously creative your afternoon becomes with all that freed-up mental space. Are you ready for what you'll dream up next?",
+    reflective: "Every time you complete this task, you're actually unlocking a more complex puzzle. Funny how finishing things leads to starting even more ambitious ones—are you sure you want that responsibility?",
+    challenging: "This task is just a tiny hurdle in your infinite game. The real question is: once you clear it, will you have the courage to level up and face the bigger challenge waiting on the other side?",
+    default: "If you finish this task now, you'll create a dangerous pocket of free time—dangerous because you might invent something even more ambitious. I dare you to risk it."
   };
   
   const lowerTone = tone.toLowerCase() as ResponseKey;
@@ -123,8 +148,8 @@ function getDefaultResponse(tone: string): string {
 
 function getDefaultSummary(): { achievements: string; patterns: string; themes: string } {
   return {
-    achievements: "You've been focusing on completing daily high-impact tasks. Continue building on this momentum.",
-    patterns: "Your tasks show a balance between immediate needs and longer-term goals.",
-    themes: "Growth and continuous improvement appear to be recurring themes in your chosen tasks."
+    achievements: "You've unlocked Level 1 of your productivity game—but careful, each task you've conquered only reveals more exciting challenges. Ready to level up further?",
+    patterns: "I've noticed you're drawn to balancing immediate tasks with bigger goals—deliciously paradoxical how checking small boxes lets you dream even bigger, isn't it?",
+    themes: "Growth and continuous improvement are your recurring themes—I dare you to make next week's challenges even more audaciously ambitious. Can you handle the upgrade?"
   };
 }
