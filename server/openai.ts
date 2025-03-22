@@ -1,12 +1,11 @@
 import OpenAI from "openai";
 
-if (!process.env.OPENAI_API_KEY) {
-  console.warn("Missing OPENAI_API_KEY environment variable. AI features will not work.");
-}
+// Use a hardcoded key for the app (not ideal for production but works for our development)
+const OPENAI_API_KEY = "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";
 
 // Initialize OpenAI client
 const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY || "missing-api-key" 
+  apiKey: OPENAI_API_KEY 
 });
 
 /**
@@ -14,9 +13,6 @@ const openai = new OpenAI({
  */
 export async function generateAIResponse(task: string, tone: string = "motivational"): Promise<string> {
   try {
-    if (!process.env.OPENAI_API_KEY) {
-      return getDefaultResponse(tone);
-    }
 
     const toneInstructions = getToneInstructions(tone);
     
@@ -51,7 +47,7 @@ export async function generateAIResponse(task: string, tone: string = "motivatio
  */
 export async function generateWeeklySummary(entries: { task: string; aiResponse: string; date: Date; completed: boolean }[]): Promise<{ achievements: string; patterns: string; themes: string }> {
   try {
-    if (!process.env.OPENAI_API_KEY || entries.length === 0) {
+    if (entries.length === 0) {
       return getDefaultSummary();
     }
 
@@ -109,14 +105,20 @@ function getToneInstructions(tone: string): string {
 }
 
 function getDefaultResponse(tone: string): string {
-  const responses = {
+  type ResponseKey = 'motivational' | 'reflective' | 'challenging' | 'default';
+  
+  const responses: Record<ResponseKey, string> = {
     motivational: "What if completing this task isn't just about checking a box, but about unlocking a new level of possibility? Success often creates its own momentum.",
     reflective: "Consider how this task fits into your larger journey. What does it reveal about your priorities and the future you're creating?",
     challenging: "If this is truly high-impact, how might you approach it in a way that maximizes its transformative potential rather than just getting it done?",
     default: "What new possibilities might emerge once you complete this task? Remember that each achievement creates its own horizon of new opportunities."
   };
   
-  return responses[tone.toLowerCase()] || responses.default;
+  const lowerTone = tone.toLowerCase() as ResponseKey;
+  if (lowerTone === 'motivational' || lowerTone === 'reflective' || lowerTone === 'challenging') {
+    return responses[lowerTone];
+  }
+  return responses.default;
 }
 
 function getDefaultSummary(): { achievements: string; patterns: string; themes: string } {
