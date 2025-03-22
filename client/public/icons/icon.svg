@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" rx="128" fill="#6366f1" />
+  
+  <!-- Lightning Bolt for "Nudge" -->
+  <path d="M320 144L192 256L240 320L160 368L320 144Z" fill="white" stroke="white" stroke-width="8" />
+  
+  <!-- Motivation Arrow (Up) -->
+  <path d="M256 96L192 160H320L256 96Z" fill="white" />
+  
+  <!-- Circular Progress (representing daily check-in) -->
+  <circle cx="256" cy="256" r="144" fill="none" stroke="white" stroke-width="16" stroke-dasharray="754" stroke-dashoffset="188" />
+  
+  <!-- Star Burst (representing achievement) -->
+  <path d="M400 256L384 240L368 256L384 272L400 256Z" fill="white" />
+  <path d="M144 256L128 240L112 256L128 272L144 256Z" fill="white" />
+  <path d="M256 144L240 128L256 112L272 128L256 144Z" fill="white" />
+  <path d="M256 400L240 384L256 368L272 384L256 400Z" fill="white" />
+</svg>
