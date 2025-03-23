@@ -1,6 +1,42 @@
-node_modules
-dist
+# Dependency directories
+node_modules/
+.npm/
+
+# Build directories
+dist/
+build/
+out/
+
+# Environment variables and secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# IDE / editor folders
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
 .DS_Store
-server/public
-vite.config.ts.*
-*.tar.gz
+
+# Coverage directory
+coverage/
+
+# Misc
+.DS_Store
+Thumbs.db
