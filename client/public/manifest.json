@@ -1,24 +1,34 @@
 {
-  "name": "NudgeBot - Daily Motivation",
+  "name": "NudgeBot - Daily Challenge",
   "short_name": "NudgeBot",
-  "description": "A daily check-in app that transforms personal productivity with AI-powered paradoxical reflections",
+  "description": "Motivational daily check-in app with AI-powered reflections and challenges",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "orientation": "portrait",
   "theme_color": "#6366f1",
-  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
-      "type": "image/png",
       "sizes": "192x192",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
       "src": "/icons/icon-512x512.png",
-      "type": "image/png",
       "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "lifestyle", "utilities"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Check In Today",
+      "short_name": "Check In",
+      "description": "Record today's challenge",
+      "url": "/"
     }
   ]
 }

@@ -7,7 +7,59 @@
     @apply border-border;
   }
 
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
   body {
     @apply font-sans antialiased bg-background text-foreground;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    touch-action: manipulation;
+  }
+  
+  /* Prevent iOS zooming on form elements focus */
+  input, textarea, select, button {
+    font-size: 16px; /* Prevent iOS zoom on focus */
+  }
+}
+
+@layer components {
+  /* Mobile-friendly components */
+  .mobile-container {
+    @apply px-4 md:px-6 py-4;
+  }
+  
+  .touch-button {
+    @apply py-3 px-4 rounded-lg min-h-[2.75rem] flex items-center justify-center;
+    touch-action: manipulation;
+  }
+  
+  .touch-input {
+    @apply py-3 px-4 rounded-lg min-h-[2.75rem];
+  }
+  
+  /* Bottom navigation menu (if needed) */
+  .bottom-nav {
+    @apply fixed bottom-0 left-0 right-0 bg-background border-t border-border py-2;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    z-index: 50;
+  }
+  
+  /* Add enough bottom margin to content to prevent it being hidden by bottom nav */
+  .has-bottom-nav {
+    @apply pb-16;
+  }
+
+  /* For install prompt display */
+  .install-prompt {
+    @apply fixed bottom-4 left-4 right-4 bg-primary text-primary-foreground p-4 rounded-lg shadow-lg;
+    z-index: 100;
+    animation: slide-up 0.3s ease-out;
+  }
+  
+  @keyframes slide-up {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
   }
 }
