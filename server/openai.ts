@@ -116,7 +116,7 @@ Return your analysis in JSON format with three keys: achievements, patterns, and
 }
 
 // Helper functions
-function getToneInstructions(tone: string): string {
+export function getToneInstructions(tone: string): string {
   switch (tone.toLowerCase()) {
     case "motivational":
       return "Your tone should be motivational and encouraging, focusing on the potential impact and growth opportunities.";
