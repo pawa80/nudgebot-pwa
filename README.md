@@ -34,3 +34,20 @@ NudgeBot is specifically designed for ADHD-like, novelty-seeking mindsets with p
 ## Development
 
 This project is built with modern JavaScript/TypeScript tooling including Vite, React, and Express. The codebase follows a modular structure with the frontend and backend in the same repository for seamless development.
+
+## Deploying to GitHub Pages
+
+To deploy the client application to GitHub Pages, follow these steps:
+
+1.  **Build the client**: Run the following command in your terminal:
+    ```bash
+    npm run build:client
+    ```
+2.  **Output Directory**: The build process will generate the static assets in the `/docs` folder in the root of the project.
+3.  **GitHub Pages Configuration**:
+    *   In your GitHub repository settings, navigate to the "Pages" section.
+    *   Set the **Source** to "Deploy from a branch".
+    *   Choose your **Branch** (e.g., `main` or your default branch).
+    *   Select the **/docs** folder as the source for your site.
+4.  **Live URL**: Your application will be available at a URL similar to `https://<username>.github.io/<repository-name>/`. For this specific project, the URL will be: `https://pawa80.github.io/nudgebot-pwa/`
+5.  **Limitation Reminder**: Please note that this deployment method only serves the static client-side application. Backend features, including user authentication, AI-powered responses, and data storage, will not function as they require the server to be running. This deployment is suitable for previewing the UI and client-side interactions.
