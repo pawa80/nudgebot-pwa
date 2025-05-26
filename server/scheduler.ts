@@ -100,7 +100,7 @@ export function setupScheduler(storage: IStorage) {
       
       // Process a random user for testing
       if (users.length > 0) {
-        const randomUser = users[0];
+        const randomUser = users[Math.floor(Math.random() * users.length)];
         log(`Testing summary generation for user ${randomUser.id}`, "scheduler");
         
         // Check their settings
